@@ -1,7 +1,7 @@
 package com.alexis.sprinfg.msvc.usuarios;
 
 public class DepositTransaction extends AbstractTransaction {
-
+     // Transacción de depósito bancario
     public DepositTransaction(String transactionId) {
         super(transactionId);
     }
