@@ -8,7 +8,7 @@ import java.util.Map;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        TransactionProcessor processor = new TransactionProcessor();
+        TransactionProcessor processor = new TransactionProcessor(new AutorizacionServiceImpl());
         // 1. Crear con referencia
         DepositTransaction dep001 = new DepositTransaction("DEP001");
         DepositTransaction dep002 = new DepositTransaction("DEP002") {

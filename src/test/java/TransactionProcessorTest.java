@@ -1,52 +1,71 @@
-import com.alexis.sprinfg.msvc.usuarios.AbstractTransaction;
-import com.alexis.sprinfg.msvc.usuarios.TransactionProcessor;
-import com.alexis.sprinfg.msvc.usuarios.WithdrawalTransaction;
+import com.alexis.sprinfg.msvc.usuarios.*;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.BeforeEach;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class TransactionProcessorTest {
-    //Caso 1 — procesa varias transacciones y retorna el conteo correcto de exitosas.
-    @Test
-    public void testProcessAll_MultipleTransactions_ReturnsCorrectCount() {
-        //given
-        TransactionProcessor processor = new TransactionProcessor();
-        Map<AbstractTransaction, Double> montos = new LinkedHashMap<>();
-        WithdrawalTransaction wit001 = new WithdrawalTransaction("WIT001", 50.0);
-        WithdrawalTransaction wit002 = new WithdrawalTransaction("WIT002", 500.0);
-        WithdrawalTransaction wit003 = new WithdrawalTransaction("WIT003", 200.0);
-        WithdrawalTransaction wit004 = new WithdrawalTransaction("WIT004", 5000000);
-        //when
-        montos.put(wit001, 100.0);
-        montos.put(wit002, 100.0);
-        montos.put(wit003, 100.0);
-        montos.put(wit004, 15000.0);
-        //then
-        int exitosas = processor.processAll(montos);
-        assertEquals(2, exitosas);
+class TransactionProcessorTest {
 
+    @Mock
+    AutorizacionService autorizacionService;
+
+    TransactionProcessor processor;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        processor = new TransactionProcessor(autorizacionService);
     }
+
     @Test
-    public void testProcessAll_EmptyMap_ReturnsZero() {
+    void testSoloTransaccionesAutorizadasSeProcesan() {
         // Given
-        TransactionProcessor processor = new TransactionProcessor();
+        DepositTransaction dep001 = new DepositTransaction("DEP001");
+        DepositTransaction dep002 = new DepositTransaction("DEP002");
+
         Map<AbstractTransaction, Double> montos = new LinkedHashMap<>();
+        montos.put(dep001, 100.0);
+        montos.put(dep002, 100.0);
 
-        // transacciones que van a fallar todas
-        WithdrawalTransaction wit001 = new WithdrawalTransaction("WIT001", 50.0);
-        WithdrawalTransaction wit002 = new WithdrawalTransaction("WIT002", 30.0);
-
-        montos.put(wit001, 100.0); // saldo insuficiente → KO
-        montos.put(wit002, 100.0); // saldo insuficiente → KO
+        // Le decimos al mock qué retornar
+        when(autorizacionService.estaAutorizada("DEP001")).thenReturn(true);
+        when(autorizacionService.estaAutorizada("DEP002")).thenReturn(false);
 
         // When
         int exitosas = processor.processAll(montos);
 
         // Then
-        assertEquals(0, exitosas);
+        assertEquals(1, exitosas); // solo DEP001 fue autorizada y exitosa
+        verify(autorizacionService).estaAutorizada("DEP001"); // verificar que se llamó
+        verify(autorizacionService).estaAutorizada("DEP002"); // verificar que se llamó
+    }
+    @Test
+    void testnopasaNingunaTransaccion(){
+        // Given
+        DepositTransaction dep001 = new DepositTransaction("DEP001");
+        DepositTransaction dep002 = new DepositTransaction("DEP002");
+
+        Map<AbstractTransaction, Double> montos = new LinkedHashMap<>();
+        montos.put(dep001, 100.0);
+        montos.put(dep002, 100.0);
+
+        // Le decimos al mock qué retornar
+        when(autorizacionService.estaAutorizada("DEP001")).thenReturn(false);
+        when(autorizacionService.estaAutorizada("DEP002")).thenReturn(false);
+
+        // When
+        int exitosas = processor.processAll(montos);
+
+        // Then
+        assertEquals(0, exitosas); // solo DEP001 fue autorizada y exitosa
+        verify(autorizacionService).estaAutorizada("DEP001"); // verificar que se llamó
+        verify(autorizacionService).estaAutorizada("DEP002"); // verificar que se llamó
+
     }
 }
