@@ -1,4 +1,5 @@
 package com.alexis.sprinfg.msvc.usuarios;
 
-public class TransactionType {
+public enum TransactionType {
+    DEPOSIT, WITHDRAWAL, TRANSFER
 }
